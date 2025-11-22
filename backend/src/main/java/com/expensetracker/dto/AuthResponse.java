@@ -2,23 +2,23 @@ package com.expensetracker.dto;
 
 import com.expensetracker.model.Role;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 /**
- * Data Transfer Object for User
- * Implements DTO Pattern - separates internal model from external representation
+ * Authentication Response DTO
+ * Contains JWT token and user information
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
-    private Long id;
+@Builder
+public class AuthResponse {
+    private String token;
+    private Long userId;
     private String username;
     private String email;
     private String fullName;
     private Role role;
-    private LocalDateTime createdAt;
 }
