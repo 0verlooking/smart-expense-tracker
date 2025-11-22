@@ -27,7 +27,8 @@ export const AuthProvider = ({ children }) => {
         password,
       });
 
-      const { token, ...userData } = response.data;
+      const { token, userId, ...rest } = response.data;
+      const userData = { id: userId, ...rest };
 
       // Save to localStorage
       localStorage.setItem('token', token);
@@ -52,7 +53,8 @@ export const AuthProvider = ({ children }) => {
         fullName,
       });
 
-      const { token, ...userData } = response.data;
+      const { token, userId, ...rest } = response.data;
+      const userData = { id: userId, ...rest };
 
       // Save to localStorage
       localStorage.setItem('token', token);
