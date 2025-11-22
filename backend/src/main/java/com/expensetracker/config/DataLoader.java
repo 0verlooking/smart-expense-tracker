@@ -1,6 +1,8 @@
 package com.expensetracker.config;
 
 import com.expensetracker.model.*;
+import com.expensetracker.model.Budget.PeriodType;
+import com.expensetracker.model.Expense.PaymentMethod;
 import com.expensetracker.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
