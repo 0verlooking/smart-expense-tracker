@@ -8,22 +8,26 @@ Smart Expense Tracker - це сучасна система для відстеж
 
 ### Основні можливості
 
-- Управління витратами (створення, редагування, видалення)
-- Категоризація витрат
-- Управління бюджетами
-- Аналітика та візуалізація даних
-- Фільтрація витрат за різними критеріями
-- Респонсивний дизайн
+- **Автентифікація та авторизація** - JWT-based authentication з роль-based доступом
+- **Управління користувачами** - Admin панель для керування користувачами
+- **Управління витратами** - створення, редагування, видалення витрат
+- **Категоризація витрат** - гнучка система категорій
+- **Управління бюджетами** - планування та контроль витрат
+- **Аналітика та візуалізація** - графіки та звіти
+- **Фільтрація витрат** - пошук за різними критеріями
+- **Респонсивний дизайн** - адаптивний інтерфейс
 
 ## Технологічний стек
 
 ### Backend
 - Java 17
 - Spring Boot 3.2.0
+- Spring Security + JWT
 - PostgreSQL 15
 - Hibernate (JPA)
 - Maven
 - Swagger/OpenAPI
+- BCrypt (password hashing)
 
 ### Frontend
 - React 18
@@ -137,6 +141,12 @@ docker-compose up --build
    - **Backend API:** http://localhost:8080
    - **Swagger UI:** http://localhost:8080/swagger-ui.html
 
+5. Увійдіть в систему, використовуючи тестовий акаунт:
+   - **Admin:** username=`admin`, password=`admin123`
+   - **User:** username=`user`, password=`user123`
+
+> **Примітка:** Детальна інформація про аутентифікацію доступна в [AUTHENTICATION.md](./AUTHENTICATION.md)
+
 ### Запуск без Docker
 
 #### Backend
@@ -172,7 +182,16 @@ npm start
 
 ## API Endpoints
 
-### Users
+### Authentication (Public)
+- `POST /api/auth/register` - реєстрація нового користувача
+- `POST /api/auth/login` - вхід в систему (отримання JWT токену)
+
+### Admin (Admin Only)
+- `GET /api/admin/users` - отримати всіх користувачів
+- `PUT /api/admin/users/{id}/role` - змінити роль користувача
+- `DELETE /api/admin/users/{id}` - видалити користувача
+
+### Users (Protected)
 - `GET /api/users` - отримати всіх користувачів
 - `GET /api/users/{id}` - отримати користувача за ID
 - `POST /api/users` - створити користувача
@@ -214,11 +233,14 @@ npm start
 
 ## Документація
 
+- **Authentication Guide:** [AUTHENTICATION.md](./AUTHENTICATION.md) - Повний гайд по автентифікації та авторизації
 - **Технічне завдання:** `docs/technical-specification.md`
 - **Use Case діаграма:** `docs/diagrams/use-case-diagram.puml`
 - **Sequence діаграми:** `docs/diagrams/`
 - **ER діаграма:** `docs/diagrams/er-diagram.puml`
 - **Wireframes:** `docs/wireframes/`
+- **Troubleshooting:** [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+- **Quick Start:** [QUICK_START.md](./QUICK_START.md)
 
 ## Тестування
 
@@ -296,14 +318,29 @@ docker-compose ps
 curl http://localhost:8080/actuator/health
 ```
 
+## Реалізовані можливості
+
+✅ **Автентифікація та авторизація** - JWT-based authentication з ролями USER/ADMIN
+✅ **Управління користувачами** - Admin панель для керування користувачами та ролями
+✅ **Управління витратами** - CRUD операції з витратами
+✅ **Категоризація** - Власні категорії для кожного користувача
+✅ **Бюджети** - Створення та контроль бюджетів
+✅ **Аналітика** - Візуалізація витрат та статистика
+✅ **Docker deployment** - Повна контейнеризація додатку
+
 ## Майбутні покращення
 
-- Автентифікація та авторизація (JWT)
+- Refresh токени для автоматичного продовження сесії
+- Password reset через email
+- Email верифікація при реєстрації
+- 2FA (Two-Factor Authentication)
+- OAuth2 інтеграція (Google, GitHub)
 - Експорт звітів у PDF/Excel
-- Мобільний додаток
+- Мобільний додаток (React Native)
 - Push-сповіщення про перевищення бюджету
 - Інтеграція з банківськими API
 - Багатовалютність
+- Розширена аналітика з ML прогнозами
 
 ## Автор
 
