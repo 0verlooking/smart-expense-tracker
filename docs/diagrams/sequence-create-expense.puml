@@ -1,0 +1,62 @@
+@startuml Sequence Diagram - Create Expense
+
+actor User
+participant "Frontend\n(React)" as Frontend
+participant "ExpenseController" as Controller
+participant "ExpenseService" as Service
+participant "ExpenseRepository" as Repository
+participant "CategoryRepository" as CategoryRepo
+participant "UserRepository" as UserRepo
+database "PostgreSQL" as DB
+
+User -> Frontend: Натискає "Add Expense"
+activate Frontend
+
+Frontend -> Frontend: Відкриває форму\nдодавання витрати
+Frontend -> User: Показує форму
+
+User -> Frontend: Заповнює дані\n(amount, date, category, etc.)
+User -> Frontend: Натискає "Save"
+
+Frontend -> Controller: POST /api/expenses\n{expenseDTO}
+activate Controller
+
+Controller -> Controller: Валідує вхідні дані\n(@Valid annotation)
+
+Controller -> Service: createExpense(expenseDTO)
+activate Service
+
+Service -> UserRepo: findById(userId)
+activate UserRepo
+UserRepo -> DB: SELECT * FROM users\nWHERE id = ?
+DB --> UserRepo: User entity
+UserRepo --> Service: User
+deactivate UserRepo
+
+Service -> CategoryRepo: findById(categoryId)
+activate CategoryRepo
+CategoryRepo -> DB: SELECT * FROM categories\nWHERE id = ?
+DB --> CategoryRepo: Category entity
+CategoryRepo --> Service: Category
+deactivate CategoryRepo
+
+Service -> Service: Створює Expense entity
+Service -> Repository: save(expense)
+activate Repository
+Repository -> DB: INSERT INTO expenses\nVALUES (...)
+DB --> Repository: Saved expense
+Repository --> Service: Expense entity
+deactivate Repository
+
+Service -> Service: Конвертує в ExpenseDTO\n(ModelMapper)
+Service --> Controller: ExpenseDTO
+deactivate Service
+
+Controller --> Frontend: HTTP 201 Created\n{expenseDTO}
+deactivate Controller
+
+Frontend -> Frontend: Оновлює список витрат
+Frontend -> User: Показує повідомлення\n"Витрата додана"
+deactivate Frontend
+
+@enduml

@@ -1,0 +1,87 @@
+@startuml Use Case Diagram - Expense Tracker
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Користувач" as User
+
+rectangle "Система трекінгу витрат" {
+
+  package "Управління обліковим записом" {
+    usecase "Реєстрація" as UC1
+    usecase "Авторизація" as UC2
+    usecase "Редагування профілю" as UC3
+    usecase "Видалення облікового запису" as UC4
+  }
+
+  package "Управління витратами" {
+    usecase "Додати витрату" as UC5
+    usecase "Переглянути витрати" as UC6
+    usecase "Редагувати витрату" as UC7
+    usecase "Видалити витрату" as UC8
+    usecase "Фільтрувати витрати" as UC9
+    usecase "Пошук витрат" as UC10
+  }
+
+  package "Управління категоріями" {
+    usecase "Створити категорію" as UC11
+    usecase "Переглянути категорії" as UC12
+    usecase "Редагувати категорію" as UC13
+    usecase "Видалити категорію" as UC14
+  }
+
+  package "Управління бюджетом" {
+    usecase "Створити бюджет" as UC15
+    usecase "Переглянути бюджети" as UC16
+    usecase "Редагувати бюджет" as UC17
+    usecase "Видалити бюджет" as UC18
+    usecase "Перевірити статус бюджету" as UC19
+  }
+
+  package "Аналітика та звітність" {
+    usecase "Переглянути Dashboard" as UC20
+    usecase "Аналіз витрат за категоріями" as UC21
+    usecase "Аналіз витрат за періодом" as UC22
+    usecase "Порівняння бюджету та витрат" as UC23
+    usecase "Експорт звітів" as UC24
+  }
+}
+
+' Зв'язки користувача з use cases
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+
+User --> UC11
+User --> UC12
+User --> UC13
+User --> UC14
+
+User --> UC15
+User --> UC16
+User --> UC17
+User --> UC18
+User --> UC19
+
+User --> UC20
+User --> UC21
+User --> UC22
+User --> UC23
+User --> UC24
+
+' Include/Extend relationships
+UC5 ..> UC11 : <<include>>
+UC6 ..> UC9 : <<extend>>
+UC20 ..> UC21 : <<include>>
+UC20 ..> UC22 : <<include>>
+UC20 ..> UC23 : <<include>>
+
+@enduml

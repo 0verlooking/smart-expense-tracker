@@ -1,0 +1,66 @@
+@startuml Sequence Diagram - View Dashboard
+
+actor User
+participant "Frontend\n(React)" as Frontend
+participant "ExpenseController" as ExpenseCtrl
+participant "BudgetController" as BudgetCtrl
+participant "ExpenseService" as ExpenseService
+participant "BudgetService" as BudgetService
+participant "ExpenseRepository" as ExpenseRepo
+participant "BudgetRepository" as BudgetRepo
+database "PostgreSQL" as DB
+
+User -> Frontend: Відкриває Dashboard
+activate Frontend
+
+Frontend -> ExpenseCtrl: GET /api/expenses/user/{userId}
+activate ExpenseCtrl
+ExpenseCtrl -> ExpenseService: getAllExpensesByUserId(userId)
+activate ExpenseService
+ExpenseService -> ExpenseRepo: findByUserIdOrderByDateDesc(userId)
+activate ExpenseRepo
+ExpenseRepo -> DB: SELECT * FROM expenses\nWHERE user_id = ?\nORDER BY date DESC
+DB --> ExpenseRepo: List<Expense>
+ExpenseRepo --> ExpenseService: List<Expense>
+deactivate ExpenseRepo
+ExpenseService -> ExpenseService: Конвертує в List<ExpenseDTO>
+ExpenseService --> ExpenseCtrl: List<ExpenseDTO>
+deactivate ExpenseService
+ExpenseCtrl --> Frontend: HTTP 200 OK\nList<ExpenseDTO>
+deactivate ExpenseCtrl
+
+Frontend -> BudgetCtrl: GET /api/budgets/user/{userId}/active
+activate BudgetCtrl
+BudgetCtrl -> BudgetService: getActiveBudgetsByUserId(userId)
+activate BudgetService
+BudgetService -> BudgetRepo: findActiveBudgetsByUserIdAndDate(userId, today)
+activate BudgetRepo
+BudgetRepo -> DB: SELECT * FROM budgets\nWHERE user_id = ?\nAND start_date <= ?\nAND end_date >= ?
+DB --> BudgetRepo: List<Budget>
+BudgetRepo --> BudgetService: List<Budget>
+deactivate BudgetRepo
+
+loop Для кожного бюджету
+  BudgetService -> ExpenseRepo: getTotalExpensesByUserIdAndDateRange(userId, startDate, endDate)
+  activate ExpenseRepo
+  ExpenseRepo -> DB: SELECT SUM(amount)\nFROM expenses\nWHERE user_id = ?\nAND date BETWEEN ? AND ?
+  DB --> ExpenseRepo: BigDecimal total
+  ExpenseRepo --> BudgetService: BigDecimal spent
+  deactivate ExpenseRepo
+  BudgetService -> BudgetService: Обчислює spent та remaining
+end
+
+BudgetService -> BudgetService: Конвертує в List<BudgetDTO>
+BudgetService --> BudgetCtrl: List<BudgetDTO>
+deactivate BudgetService
+BudgetCtrl --> Frontend: HTTP 200 OK\nList<BudgetDTO>
+deactivate BudgetCtrl
+
+Frontend -> Frontend: Обробляє дані\n- Групує витрати за категоріями\n- Підраховує загальні витрати\n- Готує дані для графіків
+
+Frontend -> Frontend: Рендерить компоненти\n- Cards з метриками\n- Pie Chart (категорії)\n- Bar Chart (бюджети)
+
+Frontend -> User: Відображає Dashboard\nз аналітикою
+deactivate Frontend
+
+@enduml

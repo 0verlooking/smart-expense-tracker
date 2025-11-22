@@ -1,0 +1,79 @@
+@startuml ER Diagram - Expense Tracker Database
+
+' Entities
+entity "users" as users {
+  * id : BIGINT <<PK>>
+  --
+  * username : VARCHAR(255) <<UNIQUE>>
+  * email : VARCHAR(255) <<UNIQUE>>
+  * password : VARCHAR(255)
+  full_name : VARCHAR(255)
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "categories" as categories {
+  * id : BIGINT <<PK>>
+  --
+  * name : VARCHAR(255)
+  description : VARCHAR(500)
+  icon_name : VARCHAR(255)
+  color_code : VARCHAR(50)
+  * user_id : BIGINT <<FK>>
+  created_at : TIMESTAMP
+}
+
+entity "expenses" as expenses {
+  * id : BIGINT <<PK>>
+  --
+  * amount : DECIMAL(10,2)
+  * date : DATE
+  description : VARCHAR(1000)
+  merchant : VARCHAR(255)
+  payment_method : VARCHAR(50)
+  notes : VARCHAR(500)
+  * user_id : BIGINT <<FK>>
+  * category_id : BIGINT <<FK>>
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "budgets" as budgets {
+  * id : BIGINT <<PK>>
+  --
+  * amount : DECIMAL(10,2)
+  * start_date : DATE
+  * end_date : DATE
+  budget_name : VARCHAR(255)
+  period_type : VARCHAR(50)
+  * user_id : BIGINT <<FK>>
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' Relationships
+users ||--o{ categories : "має"
+users ||--o{ expenses : "створює"
+users ||--o{ budgets : "встановлює"
+categories ||--o{ expenses : "категоризує"
+
+note right of expenses
+  **Payment Methods:**
+  - CASH
+  - CREDIT_CARD
+  - DEBIT_CARD
+  - BANK_TRANSFER
+  - MOBILE_PAYMENT
+  - OTHER
+end note
+
+note right of budgets
+  **Period Types:**
+  - DAILY
+  - WEEKLY
+  - MONTHLY
+  - YEARLY
+  - CUSTOM
+end note
+
+@enduml
