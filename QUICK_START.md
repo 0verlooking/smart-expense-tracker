@@ -21,12 +21,24 @@ docker compose version
 
 ### Крок 2: Запуск проекту
 
+**ВАЖЛИВО: Якщо це перший запуск або були проблеми з базою даних:**
+
+```bash
+# Використайте скрипт restart (рекомендовано)
+./restart.sh
+```
+
+**АБО вручну:**
+
 ```bash
 # 1. Перейдіть у директорію проекту
 cd smart-expense-tracker
 
-# 2. Запустіть всі сервіси
-docker compose up -d --build
+# 2. Зупиніть старі контейнери та видаліть volumes
+docker-compose down -v
+
+# 3. Запустіть всі сервіси
+docker-compose up --build
 ```
 
 **Це запустить:**
@@ -52,10 +64,22 @@ chmod +x check-system.sh
 ✓ Frontend is accessible
 ```
 
-### Крок 4: Відкрийте додаток
+### Крок 4: Відкрийте додаток та увійдіть
 
 **Frontend (Інтерфейс користувача):**
 🌐 http://localhost:3000
+
+Ви побачите сторінку входу. **Використайте тестовий акаунт:**
+
+**👤 Акаунт адміністратора:**
+- Username: `admin`
+- Password: `admin123`
+- Можливості: управління користувачами + всі функції
+
+**👤 Акаунт користувача:**
+- Username: `user`
+- Password: `user123`
+- Можливості: управління витратами, категоріями, бюджетами
 
 **Backend API (Swagger документація):**
 📚 http://localhost:8080/swagger-ui.html
@@ -65,12 +89,19 @@ chmod +x check-system.sh
 
 ## Перші кроки в додатку
 
+### 0. Вхід в систему
+1. Відкрийте http://localhost:3000
+2. Введіть credentials: **admin** / **admin123** (або user/user123)
+3. Натисніть **Login**
+
 ### 1. Dashboard
-При першому запуску ви побачите:
-- 8 тестових витрат
+Після входу ви побачите:
+- 8 тестових витрат користувача "user"
 - 6 категорій
 - 2 бюджети
 - Графіки та аналітику
+
+**Якщо ви адмін:** у меню буде пункт "Admin Panel" для управління користувачами
 
 ### 2. Додавання нової витрати
 1. Натисніть кнопку **"+"** (справа внизу)
@@ -93,12 +124,29 @@ chmod +x check-system.sh
 
 ## Що якщо щось не працює?
 
-### Backend не відповідає (404 помилки)
+### ❌ Помилка: "column role of relation users contains null values"
+
+**Це означає що стара база даних без автентифікації заважає.**
+
+**РІШЕННЯ:**
+```bash
+# Використайте скрипт restart (РЕКОМЕНДОВАНО!)
+./restart.sh
+
+# АБО вручну:
+docker-compose down -v
+docker-compose up --build
+```
+
+### Backend не відповідає (404 або 500 помилки)
 
 **Швидке рішення:**
 ```bash
-# Перезапустіть backend
-docker compose restart backend
+# Використайте restart script
+./restart.sh
+
+# АБО перезапустіть backend
+docker-compose restart backend
 
 # Дочекайтеся 30 секунд
 # Перевірте: http://localhost:8080/actuator/health
@@ -140,8 +188,11 @@ docker exec -i expense-tracker-db psql -U postgres -d expense_tracker_db < backe
 ## Корисні команди
 
 ```bash
+# 🔄 ПОВНИЙ ПЕРЕЗАПУСК (видаляє стару базу)
+./restart.sh
+
 # Зупинити всі сервіси
-docker compose stop
+docker-compose stop
 
 # Запустити знову
 docker compose start
@@ -166,9 +217,9 @@ docker compose down -v
 
 Система автоматично створює:
 
-**Користувач:**
-- Username: `testuser`
-- Email: `test@example.com`
+**Користувачі:**
+- **Admin:** username=`admin`, password=`admin123`, role=ADMIN
+- **User:** username=`user`, password=`user123`, role=USER
 
 **Категорії (6):**
 - 🍔 Food & Dining
@@ -207,9 +258,9 @@ docker compose down
 ## Потрібна допомога?
 
 - 📖 Детальна документація: `README.md`
+- 🔐 Authentication Guide: `AUTHENTICATION.md`
 - 🔧 Troubleshooting: `TROUBLESHOOTING.md`
-- 🏗️ Архітектура: `docs/architecture.md`
-- 🚀 Deployment: `docs/deployment-guide.md`
+- 📚 API Documentation: http://localhost:8080/swagger-ui.html
 
 ---
 
