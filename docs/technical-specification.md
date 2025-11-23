@@ -18,19 +18,33 @@
 
 ### 3. Функціональні вимоги
 
-#### 3.1 Управління користувачами
+#### 3.1 Автентифікація та авторизація
+- **Реєстрація нових користувачів** з автоматичним присвоєнням ролі USER
+- **JWT-based авторизація** для безпечного доступу до API
+- **Роль-based доступ (RBAC):**
+  - **USER** - доступ до власних витрат, категорій та бюджетів
+  - **ADMIN** - повний доступ + управління користувачами
+- **BCrypt хешування паролів** (strength 10)
+- **Захищені маршрути** на frontend та backend
+- **Автоматичний logout** після закінчення терміну дії токену (24 години)
+
+#### 3.2 Управління користувачами
 - Реєстрація нових користувачів
 - Авторизація в системі
 - Редагування профілю користувача
 - Видалення облікового запису
+- **Admin функції:**
+  - Перегляд всіх користувачів системи
+  - Зміна ролей користувачів (USER ↔ ADMIN)
+  - Видалення користувачів
 
-#### 3.2 Управління категоріями витрат
+#### 3.3 Управління категоріями витрат
 - Створення нових категорій
 - Редагування існуючих категорій
 - Видалення категорій
 - Призначення кольорів та іконок категоріям
 
-#### 3.3 Управління витратами
+#### 3.4 Управління витратами
 - Додавання нових записів витрат
 - Редагування існуючих витрат
 - Видалення витрат
@@ -40,13 +54,13 @@
   - За сумою
   - За способом оплати
 
-#### 3.4 Управління бюджетом
+#### 3.5 Управління бюджетом
 - Створення бюджетних планів
 - Встановлення лімітів на різні періоди (тиждень, місяць, рік)
 - Відстеження виконання бюджету
 - Сповіщення про перевищення бюджету
 
-#### 3.5 Аналітика та звітність
+#### 3.6 Аналітика та звітність
 - Візуалізація витрат за категоріями (кругова діаграма)
 - Графік витрат за періодами (стовпчаста діаграма)
 - Підрахунок загальних витрат
@@ -57,6 +71,8 @@
 #### 4.1 Backend
 - **Мова програмування:** Java 17
 - **Фреймворк:** Spring Boot 3.2.0
+- **Безпека:** Spring Security + JWT (JSON Web Tokens)
+- **Хешування паролів:** BCrypt (strength 10)
 - **База даних:** PostgreSQL 15
 - **ORM:** Hibernate (JPA)
 - **Build tool:** Maven
@@ -95,9 +111,12 @@
 1. **Repository Pattern** - для роботи з даними
 2. **Service Layer Pattern** - для бізнес-логіки
 3. **DTO Pattern** - для передачі даних між шарами
-4. **Dependency Injection** - для управління залежностями
+4. **Dependency Injection** - для управління залежностями (Spring IoC Container)
 5. **Factory Pattern** - для створення об'єктів
 6. **Strategy Pattern** - для різних стратегій обробки
+7. **Filter/Chain of Responsibility Pattern** - JWT Authentication Filter
+8. **Builder Pattern** - для створення складних об'єктів (AuthResponse, User)
+9. **Facade Pattern** - AuthService як фасад для автентифікації
 
 #### 5.3 Database Schema
 
@@ -105,10 +124,11 @@
 
 1. **users**
    - id (PK)
-   - username
-   - email
-   - password
+   - username (UNIQUE, NOT NULL)
+   - email (UNIQUE, NOT NULL)
+   - password (NOT NULL, BCrypt hashed)
    - full_name
+   - role (NOT NULL, ENUM: USER, ADMIN, default: USER)
    - created_at
    - updated_at
 
@@ -147,21 +167,35 @@
 
 ### 6. API Endpoints
 
-#### 6.1 Users API
+#### 6.1 Authentication API (Public)
+- POST /api/auth/register - реєстрація нового користувача
+  - Request: { username, email, password, fullName }
+  - Response: { token, userId, username, email, fullName, role }
+- POST /api/auth/login - авторизація користувача
+  - Request: { username, password }
+  - Response: { token, userId, username, email, fullName, role }
+
+#### 6.2 Admin API (Admin Only - requires ADMIN role)
+- GET /api/admin/users - отримати всіх користувачів системи
+- PUT /api/admin/users/{id}/role - змінити роль користувача
+  - Request: { role: "USER" | "ADMIN" }
+- DELETE /api/admin/users/{id} - видалити користувача
+
+#### 6.3 Users API (Protected - requires authentication)
 - GET /api/users - отримати всіх користувачів
 - GET /api/users/{id} - отримати користувача за ID
 - POST /api/users - створити користувача
 - PUT /api/users/{id} - оновити користувача
 - DELETE /api/users/{id} - видалити користувача
 
-#### 6.2 Categories API
+#### 6.4 Categories API (Protected)
 - GET /api/categories/user/{userId} - отримати категорії користувача
 - GET /api/categories/{id} - отримати категорію за ID
 - POST /api/categories - створити категорію
 - PUT /api/categories/{id} - оновити категорію
 - DELETE /api/categories/{id} - видалити категорію
 
-#### 6.3 Expenses API
+#### 6.5 Expenses API (Protected)
 - GET /api/expenses/user/{userId} - отримати витрати користувача
 - GET /api/expenses/{id} - отримати витрату за ID
 - GET /api/expenses/user/{userId}/daterange - витрати за період
@@ -169,7 +203,7 @@
 - PUT /api/expenses/{id} - оновити витрату
 - DELETE /api/expenses/{id} - видалити витрату
 
-#### 6.4 Budgets API
+#### 6.6 Budgets API (Protected)
 - GET /api/budgets/user/{userId} - отримати бюджети користувача
 - GET /api/budgets/{id} - отримати бюджет за ID
 - GET /api/budgets/user/{userId}/active - активні бюджети
@@ -184,10 +218,16 @@
 - Підтримка одночасних користувачів: до 1000
 
 #### 7.2 Безпека
-- Валідація вхідних даних
-- Обробка помилок
-- SQL injection protection (через JPA)
-- XSS protection
+- **JWT Authentication** - stateless authentication з токенами
+- **BCrypt Password Hashing** - криптографічне хешування паролів (strength 10)
+- **Role-Based Access Control (RBAC)** - контроль доступу на основі ролей
+- **Spring Security** - комплексний security framework
+- **CORS Configuration** - налаштування для frontend-backend взаємодії
+- **Валідація вхідних даних** - Bean Validation (JSR-303)
+- **Обробка помилок** - централізована обробка з правильними HTTP статусами
+- **SQL injection protection** - через JPA Criteria API та параметризовані запити
+- **XSS protection** - валідація та санітизація вхідних даних
+- **HTTPS ready** - готовність до використання HTTPS в production
 
 #### 7.3 Масштабованість
 - Горизонтальне масштабування через Docker
@@ -201,17 +241,28 @@
 ### 8. Інтерфейс користувача
 
 #### 8.1 Основні екрани
-1. **Dashboard** - головна сторінка з аналітикою
-2. **Expenses** - список витрат
-3. **Categories** - управління категоріями
-4. **Budgets** - управління бюджетами
+1. **Login** - сторінка авторизації
+2. **Register** - сторінка реєстрації
+3. **Dashboard** - головна сторінка з аналітикою
+4. **Expenses** - список витрат з можливістю додавання/редагування
+5. **Categories** - управління категоріями
+6. **Budgets** - управління бюджетами
+7. **Admin Panel** - панель адміністратора (тільки для ADMIN ролі)
+   - Перегляд всіх користувачів
+   - Зміна ролей користувачів
+   - Видалення користувачів
 
 #### 8.2 UI Компоненти
-- Navigation Drawer - бокова навігація
-- Data Tables - таблиці даних
-- Forms - форми введення
-- Charts - графіки та діаграми
-- Dialogs - модальні вікна
+- **Login Form** - форма авторизації з валідацією
+- **Register Form** - форма реєстрації з валідацією полів
+- **Protected Route** - HOC для захисту маршрутів
+- **Navigation Drawer** - бокова навігація з умовним відображенням Admin Panel
+- **Data Tables** - таблиці даних з пагінацією та сортуванням
+- **Forms** - форми введення з валідацією
+- **Charts** - графіки та діаграми (Recharts)
+- **Dialogs** - модальні вікна для підтвердження дій
+- **Snackbars** - сповіщення про успішні/помилкові операції
+- **User Menu** - меню користувача з logout
 
 ### 9. Процес розгортання
 
@@ -240,15 +291,26 @@ docker-compose -f docker-compose.prod.yml up -d
 
 #### 11.1 Діаграми
 - Use Case діаграма
-- Sequence діаграми
-- ER діаграма бази даних
-- Wireframes інтерфейсу
+- Sequence діаграми (включаючи Authentication Flow)
+- ER діаграма бази даних (з полем role)
+- Wireframes інтерфейсу (включаючи Login, Register, Admin Panel)
 
 #### 11.2 Технічна документація
-- API документація (Swagger)
-- README з інструкціями запуску
-- Опис архітектури
+- **API документація** - Swagger/OpenAPI автодокументація
+- **README.md** - загальна інформація та інструкції запуску
+- **AUTHENTICATION.md** - детальний гайд по автентифікації та авторизації
+- **Опис архітектури** - docs/architecture.md
+- **Deployment Guide** - docs/deployment-guide.md
 
 ### 12. Підсумок
 
 Система Smart Expense Tracker є повнофункціональним веб-додатком для управління особистими фінансами з сучасною архітектурою, що відповідає принципам SOLID та використовує кращі практики розробки програмного забезпечення.
+
+**Ключові особливості:**
+- ✅ **Безпечна автентифікація** - JWT + BCrypt з роль-based доступом
+- ✅ **SOLID принципи** - чиста архітектура з розділенням відповідальностей
+- ✅ **Патерни проектування** - Repository, Service Layer, DTO, Dependency Injection, Builder, Facade, Filter/Chain
+- ✅ **Повна контейнеризація** - Docker Compose з multi-stage builds
+- ✅ **Сучасний tech stack** - Spring Boot 3.2, React 18, PostgreSQL 15
+- ✅ **Admin функціонал** - управління користувачами та ролями
+- ✅ **Респонсивний UI** - Material-UI з адаптивним дизайном
